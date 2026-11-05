@@ -1,7 +1,8 @@
 # Flutter Mobile — Handoff Checklist (Web done, phần còn lại cho team)
 
 > **Ngày tạo:** 2026-11-05
-> **Phạm vi đã làm:** bản **dev web (`flutter run -d web-server`)** chạy đúng nghiệp vụ. Native (Android/iOS) **chưa verify**.
+> **Nền tảng đích:** **Android** (iOS nằm ngoài scope).
+> **Phạm vi đã làm:** bản **dev web (`flutter run -d web-server`)** chạy đúng nghiệp vụ. Native Android **chưa verify**.
 > **Trạng thái kỹ thuật hiện tại:** `flutter analyze` → 0 issue; `flutter test` → 354/354 pass (51 suites).
 > **Cách dùng:** tick từng ô. Mỗi ô ghi rõ file/đường dẫn để khỏi phải dò lại.
 
@@ -22,31 +23,27 @@
 
 ---
 
-## 1. Chặn release — phải sửa trước khi build native
+## 1. Chặn release — phải sửa trước khi build Android
 
-- [ ] **iOS: thiếu Access WiFi Information entitlement** → Tier 1 (Wi-Fi BSSID) **chắc chắn fail trên iOS**.
-  - Chưa có `ios/Runner/Runner.entitlements`, `project.pbxproj` không có `CODE_SIGN_ENTITLEMENTS`.
-  - Cần: tạo `Runner.entitlements` với `com.apple.developer.networking.wifi-info` = true, gắn vào target Runner (cả Debug/Release/Profile), bật capability "Access WiFi Information" trên Apple Developer portal.
-  - `NSLocalNetworkUsageDescription` trong `Info.plist` **không** đủ để đọc SSID/BSSID trên iOS 13+.
-- [ ] **iOS: kiểm tra ATS cho API local** — `ios/Runner/Info.plist` không có `NSAppTransportSecurity`. Dart dùng `dart:io` socket nên thường không bị ATS chặn, nhưng nếu chuyển sang client dựa trên `NSURLSession` (hoặc gọi qua WebView) thì `http://localhost:3000` sẽ fail. Thêm `NSAllowsLocalNetworking = true` cho build dev nếu gặp lỗi kết nối.
 - [ ] **Release signing còn dùng debug key** — `android/app/build.gradle.kts:32-38` (`signingConfig = signingConfigs.getByName("debug")`, có TODO). Cần keystore riêng + `key.properties` (git-ignore).
 - [ ] **Application ID còn placeholder** — `android/app/build.gradle.kts:18-19`: `com.corestaff.corestaff_mobile` kèm TODO. Chốt ID thật trước khi publish (đổi sau khi lên store là không được).
-- [ ] **Tên app chưa branding** — `android/app/src/main/AndroidManifest.xml:10`: `android:label="corestaff_mobile"`; `ios/Runner/Info.plist`: `CFBundleDisplayName = Corestaff Mobile`. Đổi thành `CoreStaff`.
+- [ ] **Tên app chưa branding** — `android/app/src/main/AndroidManifest.xml:10`: `android:label="corestaff_mobile"`. Đổi thành `CoreStaff`.
 - [ ] **API base hardcode, không override được** — `lib/core/config/app_constants.dart:26`: `defaultRemoteUrl = 'https://18-141-68-40.sslip.io'`, không có `String.fromEnvironment`/`--dart-define`. Cần thêm `--dart-define=API_BASE_URL=...` để build staging/prod không phải sửa code.
 - [ ] **Release mode không có fallback** — `lib/core/config/api_config.dart:106-113`: `!kDebugMode` thì probe remote, fail là ném lỗi → app kẹt ở ConnectionErrorScreen nếu remote chết. Quyết định: giữ nguyên (fail-fast) hay cho phép retry/đổi URL.
 - [ ] **CI chưa chạy Flutter** — `CoreStaff/.github/workflows/ci.yml` chỉ có Node (api/web): `npm ci → lint → build → test`. Không có job `flutter analyze` / `flutter test`. Thêm job Flutter để chặn regression 354 test.
 - [ ] **Android licenses chưa accept** (`flutter doctor`): `flutter doctor --android-licenses`.
 - [ ] **Chrome chưa cấu hình** (`flutter doctor`): cần `CHROME_EXECUTABLE` nếu muốn `flutter run -d chrome`. Không ảnh hưởng `-d web-server`.
-- [ ] **App icon vẫn là icon Flutter mặc định** — `android/app/src/main/res/mipmap-*/ic_launcher.png`, `ios/Runner/Assets.xcassets/AppIcon.appiconset/`.
+- [ ] **App icon vẫn là icon Flutter mặc định** — `android/app/src/main/res/mipmap-*/ic_launcher.png`.
 - [ ] **Bundle/version chưa chốt** — `pubspec.yaml`: `version: 1.0.0+1`.
+- [ ] **Xác nhận Android minSdk đủ cho plugin** — `android/app/build.gradle.kts:22` đang dùng `flutter.minSdkVersion` (Flutter 3.44 → 24). `network_info_plus 7` / `geolocator 14` / `image_picker 1.2` đều ổn với API 24, nhưng cần build thử để chắc.
 
 ---
 
-## 2. Verify trên máy thật (web không test được)
+## 2. Verify trên máy Android thật (web không test được)
 
 Chi tiết kịch bản đã có sẵn trong `Docs/FLUTTER_MIGRATION_FINAL_REPORT.md` §8. Dưới đây là phần **chưa ai chạy**:
 
-- [ ] **Tier 1 — Wi-Fi BSSID**: `wifi_service.dart` **không xin quyền** ở đâu cả; `location_service.hasPermission()` chỉ được gọi ở Tier 2 (`punch_coordinator.dart:171`), tức **sau** Tier 1 (dòng 131-164). Trên Android 10+ đọc BSSID cần `ACCESS_FINE_LOCATION` đã cấp runtime → lần chấm công đầu tiên trên máy mới cài sẽ trả Wi-Fi rỗng, punch rơi xuống Tier 2 rồi mới xin quyền. Cần xin quyền trước Tier 1 (hoặc chấp nhận degrade và ghi rõ).
+- [ ] **Tier 1 — Wi-Fi BSSID**: `wifi_service.dart` **không xin quyền** ở đâu cả; `location_service.hasPermission()` chỉ được gọi ở Tier 2 (`punch_coordinator.dart:171`), tức **sau** Tier 1 (dòng 131-164). Trên Android 10+ đọc BSSID cần `ACCESS_FINE_LOCATION` đã cấp runtime → lần chấm công đầu tiên trên máy mới cài sẽ trả Wi-Fi rỗng, punch rơi xuống Tier 2 rồi mới xin quyền. Cần xin quyền trước Tier 1 (hoặc chấp nhận degrade và ghi rõ). Android 13+ còn cần `NEARBY_WIFI_DEVICES` (đã khai báo trong manifest nhưng chưa xin runtime).
 - [ ] **Tier 2 — GPS geofence** (`location_service.dart`): xin quyền, sai số, ngoài geofence.
 - [ ] **Tier 3 — Selfie camera thật** (`camera_service.dart`): camera trước, từ chối quyền → phải ra `CAMERA_PERMISSION_DENIED` với câu "Cần quyền camera..."; huỷ chụp → `PunchCoordinatorCancelled`.
 - [ ] **Branch A — OUT_OFFICE**: vào thẳng selfie, không chạy Wi-Fi/GPS.
@@ -61,7 +58,7 @@ Chi tiết kịch bản đã có sẵn trong `Docs/FLUTTER_MIGRATION_FINAL_REPOR
 
 ## 3. Chưa làm — quyết định scope
 
-- [ ] **Deep link cho reset password** — grep không thấy `app_links`/`uni_links`, `AndroidManifest.xml` không có deep-link `intent-filter`, `Info.plist` không có `CFBundleURLTypes`. Hiện user **phải copy token dán tay** vào `reset_password_screen.dart:19`. Doc MIG-06 ghi "Deep link handling in Sprint 6" nhưng chưa có.
+- [ ] **Deep link cho reset password** — grep không thấy `app_links`/`uni_links`, `AndroidManifest.xml` không có deep-link `intent-filter`. Hiện user **phải copy token dán tay** vào `reset_password_screen.dart:19`. Doc MIG-06 ghi "Deep link handling in Sprint 6" nhưng chưa có.
 - [ ] **PDF export phiếu lương** — MIG-10 ghi "deferred", không có package/impl.
 - [ ] **Avatar upload** — MIG-09 ghi "not in mobile scope".
 - [ ] **2FA** — MIG-05 ghi "disabled in current mobile scope".
