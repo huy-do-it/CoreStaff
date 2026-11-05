@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -228,7 +229,7 @@ void main() {
                   .having((p) => p.workMode, 'workMode', PunchWorkMode.inOffice)
                   .having((p) => p.wifi?.bssid, 'bssid', '00:14:22:01:23:45')
                   .having((p) => p.location, 'location', isNull)
-                  .having((p) => p.selfiePath, 'selfiePath', isNull),
+                  .having((p) => p.selfieBytes, 'selfieBytes', isNull),
             ),
           )).called(1);
 
@@ -323,7 +324,7 @@ void main() {
               named: 'payload',
               that: isA<PunchRequestPayload>()
                   .having((p) => p.location, 'location', isNotNull)
-                  .having((p) => p.selfiePath, 'selfiePath', isNull),
+                  .having((p) => p.selfieBytes, 'selfieBytes', isNull),
             ),
           )).thenThrow(const ApiException(
         statusCode: 422,
@@ -332,12 +333,12 @@ void main() {
       ));
 
       // Attempt 3 (Selfie) succeeds
-      when(() => mockCamera.captureSelfie()).thenAnswer((_) async => '/tmp/captured_selfie_proof.jpg');
+      when(() => mockCamera.captureSelfie()).thenAnswer((_) async => Uint8List.fromList([1, 2, 3]));
       when(() => mockRepo.punch(
             action: PunchAction.checkIn,
             payload: any(
               named: 'payload',
-              that: isA<PunchRequestPayload>().having((p) => p.selfiePath, 'selfiePath', isNotNull),
+              that: isA<PunchRequestPayload>().having((p) => p.selfieBytes, 'selfieBytes', isNotNull),
             ),
           )).thenAnswer((_) async => selfiePunchResult);
 
@@ -364,7 +365,7 @@ void main() {
     });
 
     test('Permutation 4: OUT_OFFICE work mode strictly isolates flow (zero Wi-Fi and zero GPS access)', () async {
-      when(() => mockCamera.captureSelfie()).thenAnswer((_) async => '/tmp/out_office_selfie.jpg');
+      when(() => mockCamera.captureSelfie()).thenAnswer((_) async => Uint8List.fromList([1, 2, 3]));
       when(() => mockRepo.punch(
             action: PunchAction.checkIn,
             payload: any(named: 'payload'),
@@ -390,7 +391,7 @@ void main() {
               named: 'payload',
               that: isA<PunchRequestPayload>()
                   .having((p) => p.workMode, 'workMode', PunchWorkMode.outOffice)
-                  .having((p) => p.selfiePath, 'selfiePath', '/tmp/out_office_selfie.jpg')
+                  .having((p) => p.selfieBytes, 'selfieBytes', isNotNull)
                   .having((p) => p.location, 'location', isNull)
                   .having((p) => p.wifi, 'wifi', isNull),
             ),
@@ -890,7 +891,7 @@ void main() {
       when(() => mockLocation.getCurrentPosition()).thenAnswer(
         (_) async => const GeoPosition(latitude: 10.77, longitude: 106.70, accuracy: 10.0),
       );
-      when(() => mockCamera.captureSelfie()).thenAnswer((_) async => testSelfieFile.path);
+      when(() => mockCamera.captureSelfie()).thenAnswer((_) async => Uint8List.fromList([1, 2, 3]));
       when(() => mockLocation.hasPermission()).thenAnswer((_) async => true);
 
       // ApiClient returns 422 SELFIE_REQUIRED on first 2 calls, then succeeds on multipart
@@ -1021,13 +1022,13 @@ void main() {
       when(() => mockLocation.getCurrentPosition()).thenAnswer(
         (_) async => const GeoPosition(latitude: 10.8, longitude: 106.7, accuracy: 12.0),
       );
-      when(() => mockCamera.captureSelfie()).thenAnswer((_) async => '/tmp/selfie.jpg');
+      when(() => mockCamera.captureSelfie()).thenAnswer((_) async => Uint8List.fromList([1, 2, 3]));
 
       when(() => mockRepo.punch(
             action: any(named: 'action'),
             payload: any(
               named: 'payload',
-              that: isA<PunchRequestPayload>().having((p) => p.selfiePath, 'selfiePath', isNull),
+              that: isA<PunchRequestPayload>().having((p) => p.selfieBytes, 'selfieBytes', isNull),
             ),
           )).thenThrow(const ApiException(
         statusCode: 422,
@@ -1039,7 +1040,7 @@ void main() {
             action: any(named: 'action'),
             payload: any(
               named: 'payload',
-              that: isA<PunchRequestPayload>().having((p) => p.selfiePath, 'selfiePath', isNotNull),
+              that: isA<PunchRequestPayload>().having((p) => p.selfieBytes, 'selfieBytes', isNotNull),
             ),
           )).thenAnswer((_) async => selfiePunchResult);
 
@@ -1081,7 +1082,7 @@ void main() {
     });
 
     test('PunchBloc OUT_OFFICE emits PunchPromptSelfie with isOutOffice true', () async {
-      when(() => mockCamera.captureSelfie()).thenAnswer((_) async => '/tmp/out_selfie.jpg');
+      when(() => mockCamera.captureSelfie()).thenAnswer((_) async => Uint8List.fromList([1, 2, 3]));
       when(() => mockRepo.punch(action: any(named: 'action'), payload: any(named: 'payload')))
           .thenAnswer((_) async => selfiePunchResult);
 

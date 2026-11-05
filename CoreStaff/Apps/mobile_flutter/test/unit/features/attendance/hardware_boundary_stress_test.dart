@@ -414,7 +414,7 @@ void main() {
             action: any(named: 'action'),
             payload: any(
               named: 'payload',
-              that: isA<PunchRequestPayload>().having((p) => p.selfiePath, 'selfiePath', isNull),
+              that: isA<PunchRequestPayload>().having((p) => p.selfieBytes, 'selfieBytes', isNull),
             ),
           )).thenThrow(const ApiException(
         code: 'SELFIE_REQUIRED',
@@ -449,7 +449,7 @@ void main() {
             action: any(named: 'action'),
             payload: any(
               named: 'payload',
-              that: isA<PunchRequestPayload>().having((p) => p.selfiePath, 'selfiePath', isNull),
+              that: isA<PunchRequestPayload>().having((p) => p.selfieBytes, 'selfieBytes', isNull),
             ),
           )).thenThrow(const ApiException(
         code: 'SELFIE_REQUIRED',
@@ -487,7 +487,7 @@ void main() {
             action: any(named: 'action'),
             payload: any(
               named: 'payload',
-              that: isA<PunchRequestPayload>().having((p) => p.selfiePath, 'selfiePath', isNotNull),
+              that: isA<PunchRequestPayload>().having((p) => p.selfieBytes, 'selfieBytes', isNotNull),
             ),
           ));
     });

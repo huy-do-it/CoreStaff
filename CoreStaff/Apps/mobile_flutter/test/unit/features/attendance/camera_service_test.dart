@@ -17,17 +17,18 @@ void main() {
   });
 
   group('CameraService Unit Tests', () {
-    test('captureSelfie returns local file path on successful photo capture', () async {
-      final mockFile = XFile('/data/user/0/app/cache/selfie_123.jpg');
+    test('captureSelfie returns captured bytes on successful photo capture', () async {
+      final picked = Uint8List.fromList([0xFF, 0xD8, 0xFF, 0xE0]);
+      final mockFile = XFile.fromData(picked, name: 'selfie_123.jpg');
       when(() => mockPicker.pickImage(
             source: ImageSource.camera,
             preferredCameraDevice: CameraDevice.front,
             imageQuality: 60,
           )).thenAnswer((_) async => mockFile);
 
-      final path = await cameraService.captureSelfie();
+      final bytes = await cameraService.captureSelfie();
 
-      expect(path, '/data/user/0/app/cache/selfie_123.jpg');
+      expect(bytes, picked);
       verify(() => mockPicker.pickImage(
             source: ImageSource.camera,
             preferredCameraDevice: CameraDevice.front,
@@ -42,9 +43,9 @@ void main() {
             imageQuality: 60,
           )).thenAnswer((_) async => null);
 
-      final path = await cameraService.captureSelfie();
+      final bytes = await cameraService.captureSelfie();
 
-      expect(path, isNull);
+      expect(bytes, isNull);
     });
 
     test('captureSelfie throws ApiException when camera permission is denied by OS', () async {
@@ -71,9 +72,9 @@ void main() {
             imageQuality: 60,
           )).thenThrow(Exception('Native bridge failure'));
 
-      final path = await cameraService.captureSelfie();
+      final bytes = await cameraService.captureSelfie();
 
-      expect(path, isNull);
+      expect(bytes, isNull);
     });
   });
 }

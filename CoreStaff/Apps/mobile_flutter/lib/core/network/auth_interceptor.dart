@@ -91,7 +91,9 @@ class AuthInterceptor extends QueuedInterceptor {
   }
 
   Future<bool> _performRefresh() async {
-    if (!cookieManager.hasRefreshToken) {
+    // Web: HttpOnly cookies belong to the browser, so the app can never see
+    // `rt`; the refresh call must always be attempted and let the browser send it.
+    if (!kIsWeb && !cookieManager.hasRefreshToken) {
       return false;
     }
 
@@ -107,13 +109,18 @@ class AuthInterceptor extends QueuedInterceptor {
       final url = ApiConfig.apiUrl(ApiConfig.currentBaseUrl, '/api/auth/refresh');
       final rtHeader = '${AppConstants.refreshCookieName}=${cookieManager.rt}';
 
+      // On web the browser owns the cookies: send credentials and let it attach
+      // `rt`. A manual `Cookie:` header is a forbidden request header there, so
+      // sending it only works on native (Android/iOS) where we manage the jar.
+      final credentialsOnly = kIsWeb;
       final response = await refreshDio.post<Map<String, dynamic>>(
         url,
         options: Options(
           headers: {
-            'Cookie': rtHeader,
+            if (!credentialsOnly) 'Cookie': rtHeader,
             'Accept': 'application/json',
           },
+          extra: {if (credentialsOnly) 'withCredentials': true},
         ),
       );
 

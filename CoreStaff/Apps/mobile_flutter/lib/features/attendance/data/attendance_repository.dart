@@ -104,9 +104,10 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
       }
       formData.files.add(MapEntry(
         'selfie',
-        await MultipartFile.fromFile(
-          payload.selfiePath!,
+        MultipartFile.fromBytes(
+          payload.selfieBytes!,
           filename: 'selfie.jpg',
+          contentType: DioMediaType('image', 'jpeg'),
         ),
       ));
       if (payload.location != null) {

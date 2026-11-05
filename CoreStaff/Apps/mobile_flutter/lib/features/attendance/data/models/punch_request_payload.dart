@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 enum PunchAction {
   checkIn,
   checkOut;
@@ -61,7 +63,10 @@ class PunchRequestPayload {
   final PunchWorkMode? workMode;
   final PunchLocationPayload? location;
   final PunchWifiPayload? wifi;
-  final String? selfiePath;
+
+  /// Selfie bytes. Bytes (not a path) because `MultipartFile.fromFile` throws
+  /// `UnsupportedError` on web, where the picked image is a blob URL.
+  final Uint8List? selfieBytes;
   final String? note;
   final String? idempotencyKey;
 
@@ -69,12 +74,12 @@ class PunchRequestPayload {
     this.workMode,
     this.location,
     this.wifi,
-    this.selfiePath,
+    this.selfieBytes,
     this.note,
     this.idempotencyKey,
   });
 
-  bool get hasSelfie => selfiePath != null && selfiePath!.isNotEmpty;
+  bool get hasSelfie => selfieBytes != null && selfieBytes!.isNotEmpty;
 
   Map<String, dynamic> toJson({required bool isCheckIn}) {
     return {
