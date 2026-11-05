@@ -2,6 +2,7 @@
 
 > **Ngày tạo:** 2026-11-05
 > **Nền tảng đích:** **Android** (iOS nằm ngoài scope).
+> **Mục tiêu cuối:** Flutter `Apps/mobile_flutter` phải **clone y hệt** app Expo `Apps/mobile` (14 file / 1.404 dòng). §2 là danh sách lệch còn lại sau khi đối chiếu từng file.
 > **Phạm vi đã làm:** bản **dev web (`flutter run -d web-server`)** chạy đúng nghiệp vụ. Native Android **chưa verify**.
 > **Trạng thái kỹ thuật hiện tại:** `flutter analyze` → 0 issue; `flutter test` → 354/354 pass (51 suites).
 > **Cách dùng:** tick từng ô. Mỗi ô ghi rõ file/đường dẫn để khỏi phải dò lại.
@@ -39,7 +40,33 @@
 
 ---
 
-## 2. Verify trên máy Android thật (web không test được)
+## 2. Lệch so với app Expo cần đóng lại (mục tiêu: clone y hệt)
+
+Đã đọc toàn bộ 14 file Expo (`Apps/mobile/src/**` + `App.tsx`, 1.404 dòng) và đối chiếu từng màn. Phần lớn đã khớp (chuỗi tiếng Việt, waterfall, debounce 250ms preview, sort feed, counters, refresh indicator, role trap, security note…). Các lệch còn lại:
+
+### 2.1 Lệch hành vi (ưu tiên cao — người dùng thấy được)
+
+- [ ] **`COMPLETED` hiển thị sai chữ.** Expo: `Đã hoàn thành ca` (`OverviewScreen.tsx:36`). Flutter: `Hoàn thành` (`lib/shared/widgets/status_badge.dart:118`). Sửa `_resolveStatusLabel`.
+- [ ] **`PENDING_MANAGER` hiển thị sai chữ.** Expo: `Chờ quản lý` (`RequestsScreen.tsx:139`). Flutter gộp chung `PENDING` và `PENDING_MANAGER` → `Chờ duyệt` (`status_badge.dart:123-125`). Tách case.
+- [ ] **Trạng thái lao động mặc định.** Expo: `Đang hoạt động` khi status lạ (`AccountScreen.tsx:56`). Flutter: `default: return status;` (`status_badge.dart:153`) → hiện raw enum.
+- [ ] **Lỗi 401 không map.** Expo map `status === 401` → `Tài khoản hoặc mật khẩu không đúng.` (`auth.ts:111`); Flutter chỉ map theo `code` rồi fallback raw message (`error_resolver.dart:60-78`). Nếu API trả 401 không kèm `code`, user thấy message thô.
+- [ ] **Tab Tài khoản thiếu sub-view phiếu lương.** Expo có `AccountView = 'profile' | 'payslips'`: bấm "Phiếu lương" mở **danh sách phiếu lương ngay trong tab Tài khoản** kèm nút back (`AccountScreen.tsx:9,46-47`). Flutter chỉ chuyển sang tab Phiếu lương (`main_shell_screen.dart:135-136`). Expo **không** có cách này.
+- [ ] **Tab Tài khoản thiếu badge số phiếu lương mới.** Expo: `badge={payslips.filter(status==='RELEASED').length}` trên menu row + description `"${payslips.length} kỳ lương đã phát hành"` (`AccountScreen.tsx:40`). Flutter: description cố định `'Tra cứu bảng lương và thu nhập hàng tháng'`, không badge (`account_screen.dart:160-163`); `AccountBloc` không load payslips.
+- [ ] **Dư nút "Hủy đơn" trên đơn nghỉ.** Flutter có nút Hủy + dialog + `RequestsCancelRequested` (`leave_card.dart:161-170`). Expo **không** render nút này ở đâu cả (chỉ có hàm `cancelMyLeaveRequest` khai báo nhưng không gọi — `employee-api.ts:236`). Clone y hệt = bỏ nút, hoặc chấp nhận dư tính năng và ghi rõ.
+- [ ] **Nút "Xem trước giao diện (Offline Demo)".** Chỉ có ở Flutter (`splash_screen.dart:106` + `app.dart:80`); Expo không có, bấm vào sẽ vào app không có API.
+- [ ] **Dialog "Sprint 4/Sprint 5" lộ ra UI.** `attendance_screen.dart:73-74` hiển thị nguyên văn *"đang trong chế độ xem trước (Sprint 4) và sẽ được kích hoạt tại Sprint 5."* Chỉ chạy khi `punchBloc == null`, nhưng vẫn là text dev.
+- [ ] **Overview dùng `StatusBadge` thay label riêng.** Expo tự tính `statusLabel` với `Đã hoàn thành ca` (`OverviewScreen.tsx:36`); Flutter truyền status trực tiếp vào `StatusBadge` (`overview_shift_card.dart:76`), nên kế thừa 3 lệch chữ ở trên.
+
+### 2.2 Lệch kiến trúc (không lộ ra UI, nhưng khác bản gốc)
+
+- [ ] **Socket transports đảo thứ tự.** Expo: `['polling', 'websocket']` + comment *"Polling performs an authenticated HTTP handshake with React Native's cookie jar before upgrading"* (`realtime.ts:26`). Flutter: `['websocket', 'polling']` (`socket_service.dart:90`). Trên native, WebSocket-first **không** mang cookie jar → có thể fail auth, rồi mới rơi về polling. Nên đổi đúng thứ tự Expo.
+- [ ] **Socket nghe thêm 2 event.** Flutter đăng ký `request:new`, `leave:new` (`socket_service.dart:52-53`); Expo chỉ 5 event (`realtime.ts:10-16`). Dư thì vô hại nhưng không phải clone.
+- [ ] **Refresh theo event vs theo revision counter.** Expo: mỗi event bump `realtimeRevision` → mọi screen `useEffect` load lại (`App.tsx:114-121`). Flutter: `RealtimeSyncCoordinator` debounce 300ms rồi `triggerFullRefresh` BLoC. Hành vi quan sát được tương đương (đã test), chỉ khác cơ chế.
+- [ ] **Lifecycle resume.** Expo: `AppState === 'active'` → refresh **luôn** (`App.tsx:122-128`). Flutter: `AppLifecycleCoordinator` chỉ refresh khi nghỉ ≥15s hoặc socket đã rớt, throttle 5s (`lifecycle_listener.dart:15-18,62-75`). Đây là *cải tiến có chủ đích* (tránh reload khi vừa chụp selfie) — giữ, nhưng cần biết là **không** giống Expo.
+
+---
+
+## 3. Verify trên máy Android thật (web không test được)
 
 Chi tiết kịch bản đã có sẵn trong `Docs/FLUTTER_MIGRATION_FINAL_REPORT.md` §8. Dưới đây là phần **chưa ai chạy**:
 
@@ -56,7 +83,7 @@ Chi tiết kịch bản đã có sẵn trong `Docs/FLUTTER_MIGRATION_FINAL_REPOR
 
 ---
 
-## 3. Chưa làm — quyết định scope
+## 4. Chưa làm — quyết định scope
 
 - [ ] **Deep link cho reset password** — grep không thấy `app_links`/`uni_links`, `AndroidManifest.xml` không có deep-link `intent-filter`. Hiện user **phải copy token dán tay** vào `reset_password_screen.dart:19`. Doc MIG-06 ghi "Deep link handling in Sprint 6" nhưng chưa có.
 - [ ] **PDF export phiếu lương** — MIG-10 ghi "deferred", không có package/impl.
@@ -67,7 +94,7 @@ Chi tiết kịch bản đã có sẵn trong `Docs/FLUTTER_MIGRATION_FINAL_REPOR
 
 ---
 
-## 4. Dọn code (không gấp, nhưng nên làm trước khi mở rộng)
+## 5. Dọn code (không gấp, nhưng nên làm trước khi mở rộng)
 
 - [ ] **Xoá 1.042 dòng code chết** (đã grep: chỉ self-reference, không file nào ngoài nhóm này import):
   - `lib/screens/main_shell_screen.dart` (126) — bản cũ; bản thật là `lib/features/shell/presentation/screens/main_shell_screen.dart`
@@ -84,7 +111,7 @@ Chi tiết kịch bản đã có sẵn trong `Docs/FLUTTER_MIGRATION_FINAL_REPOR
 
 ---
 
-## 5. Môi trường chạy dev web (để team tái lập)
+## 6. Môi trường chạy dev web (để team tái lập)
 
 ```bash
 cd CoreStaff/Apps/mobile_flutter
