@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../../../core/network/api_exception.dart';
 import '../../data/attendance_repository.dart';
 import '../../data/models/punch_request_payload.dart';
@@ -85,9 +87,9 @@ class PunchCoordinatorImpl implements PunchCoordinator {
         'Ca ngoài văn phòng yêu cầu chụp ảnh selfie.',
       );
 
-      final String? selfiePath;
+      final Uint8List? selfieBytes;
       try {
-        selfiePath = await cameraService.captureSelfie();
+        selfieBytes = await cameraService.captureSelfie();
       } on ApiException catch (e) {
         return PunchCoordinatorFailure(
           message: e.message,
@@ -96,7 +98,7 @@ class PunchCoordinatorImpl implements PunchCoordinator {
         );
       }
 
-      if (selfiePath == null) {
+      if (selfieBytes == null) {
         return const PunchCoordinatorCancelled();
       }
 
@@ -109,7 +111,7 @@ class PunchCoordinatorImpl implements PunchCoordinator {
           action: action,
           payload: PunchRequestPayload(
             workMode: PunchWorkMode.outOffice,
-            selfiePath: selfiePath,
+            selfieBytes: selfieBytes,
           ),
         );
         return PunchCoordinatorSuccess(result: result, method: 'SELFIE');
@@ -217,9 +219,9 @@ class PunchCoordinatorImpl implements PunchCoordinator {
       'Vị trí ngoài phạm vi công ty. Chụp ảnh selfie để gửi quản lý duyệt.',
     );
 
-    final String? selfiePath;
+    final Uint8List? selfieBytes;
     try {
-      selfiePath = await cameraService.captureSelfie();
+      selfieBytes = await cameraService.captureSelfie();
     } on ApiException catch (e) {
       return PunchCoordinatorFailure(
         message: e.message,
@@ -228,7 +230,7 @@ class PunchCoordinatorImpl implements PunchCoordinator {
       );
     }
 
-    if (selfiePath == null) {
+    if (selfieBytes == null) {
       return const PunchCoordinatorCancelled();
     }
 
@@ -253,7 +255,7 @@ class PunchCoordinatorImpl implements PunchCoordinator {
                   bssid: wifiInfo.bssid,
                 )
               : null,
-          selfiePath: selfiePath,
+          selfieBytes: selfieBytes,
         ),
       );
       return PunchCoordinatorSuccess(result: result, method: 'SELFIE');

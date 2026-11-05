@@ -6,9 +6,14 @@ Dự án ứng dụng di động **CoreStaff** xây dựng bằng **Flutter**, s
 
 ## 1. Cấu trúc thư mục (Architecture)
 
+> **Lưu ý:** cây dưới đây là bản khung ban đầu. Code đã migrate nằm ở `lib/features/<feature>/{data,domain,presentation}` + `lib/core/`. Các file `lib/screens/*_tab.dart`, `lib/widgets/bottom_tab_bar.dart`, `lib/widgets/feature_screen.dart` là **code cũ không còn dùng** (xem mục dọn code trong `Docs/FLUTTER_NATIVE_HANDOFF_CHECKLIST.md`).
+
 ```text
 lib/
-├── main.dart                          # Điểm khởi chạy app, Theme, Bootstrap & Router phân luồng
+├── features/                          # Code đã migrate (BLoC + Clean Architecture)
+│   ├── auth/ attendance/ overview/ requests/ payslip/ account/ shell/
+├── core/                              # config, network, di, services, theme, storage
+├── main.dart
 ├── core/
 │   ├── config/
 │   │   └── api_config.dart            # Cấu hình API endpoint (Remote & Local fallback 10.0.2.2 / localhost, health check)
@@ -54,9 +59,17 @@ lib/
 ## 2. Hướng dẫn chạy ứng dụng
 
 ### Yêu cầu môi trường
-- **Flutter SDK**: >= 3.13.1 (Đã kiểm tra tương thích trên Flutter 3.47+)
+- **Flutter SDK**: >= 3.44 (Dart >= 3.12). `pubspec.yaml` đặt `sdk: ^3.12.0`.
 - **Android Studio / Xcode** (hoặc thiết bị thật bật USB Debugging)
 - Backend CoreStaff API đang chạy hoặc kết nối qua môi trường remote
+
+### Chạy bản dev web (size mobile)
+```bash
+flutter run -d web-server --web-port 8099
+# Mở http://localhost:8099/ — KHÔNG dùng 127.0.0.1 (cookie sid/rt set cho host localhost)
+```
+
+> Việc còn lại cho native (Android/iOS): xem `Docs/FLUTTER_NATIVE_HANDOFF_CHECKLIST.md`.
 
 ### Cài đặt gói phụ thuộc
 ```bash
@@ -80,7 +93,7 @@ flutter run
    - Kiểm tra kết nối API qua `/api/healthz`.
    - Tự động fallback giữa Remote API (`https://18-141-68-40.sslip.io`) và Localhost (`http://10.0.2.2:3000` trên Android emulator hoặc `http://localhost:3000`).
 2. **Quản lý phiên đăng nhập (Session & Refresh Cookies)**:
-   - Client tự động bắt và lưu `sid` và `rt` vào `SharedPreferences`.
+   - Client tự động bắt và lưu `sid` và `rt` vào secure storage (`flutter_secure_storage`, xem `lib/core/network/cookie_manager.dart`).
    - Khi token ngắn hạn hết hạn (HTTP 401), client tự động gọi `/api/auth/refresh` và retry request gốc mượt mà không làm gián đoạn người dùng.
 3. **Phân quyền và bảo mật**:
    - Ràng buộc tài khoản có `mustChangePassword == true` chuyển thẳng đến màn hình đổi mật khẩu bắt buộc.

@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import '../config/api_config.dart';
 import '../network/cookie_manager.dart';
@@ -84,7 +86,6 @@ class SocketServiceImpl implements SocketService {
     final socketPath = isLocalApi ? '/local-api/socket.io' : '/socket.io';
     final namespaceUri = '${parsed.origin}/events';
 
-    final cookieHeader = cookieManager.buildCookieHeader();
     final optionBuilder = io.OptionBuilder()
         .setTransports(['websocket', 'polling'])
         .setPath(socketPath)
@@ -93,8 +94,12 @@ class SocketServiceImpl implements SocketService {
         .setReconnectionDelay(2000)
         .enableAutoConnect();
 
-    if (cookieHeader.isNotEmpty) {
-      optionBuilder.setExtraHeaders({'cookie': cookieHeader});
+    if (kIsWeb) {
+      // Browser forbids a `Cookie` request header; the session travels as a
+      // credentialed cross-origin request instead.
+      optionBuilder.enableWithCredentials();
+    } else if (cookieManager.buildCookieHeader().isNotEmpty) {
+      optionBuilder.setExtraHeaders({'cookie': cookieManager.buildCookieHeader()});
     }
 
     final options = optionBuilder.build();

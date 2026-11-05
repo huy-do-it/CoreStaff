@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:corestaff_mobile/features/attendance/data/models/attendance_event_dto.dart';
 import 'package:corestaff_mobile/features/attendance/data/models/attendance_requirements_dto.dart';
@@ -50,13 +51,13 @@ void main() {
       expect(checkOutJson['latitude'], 10.7719);
     });
 
-    test('PunchRequestPayload hasSelfie reflects selfiePath presence', () {
+    test('PunchRequestPayload hasSelfie reflects selfieBytes presence', () {
       const payloadWithout = PunchRequestPayload(workMode: PunchWorkMode.inOffice);
       expect(payloadWithout.hasSelfie, isFalse);
 
-      const payloadWith = PunchRequestPayload(
+      final payloadWith = PunchRequestPayload(
         workMode: PunchWorkMode.outOffice,
-        selfiePath: '/tmp/selfie.jpg',
+        selfieBytes: Uint8List.fromList([1, 2, 3]),
       );
       expect(payloadWith.hasSelfie, isTrue);
     });

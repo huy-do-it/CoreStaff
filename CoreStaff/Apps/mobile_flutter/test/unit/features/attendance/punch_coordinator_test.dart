@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:corestaff_mobile/core/network/api_exception.dart';
@@ -100,7 +102,7 @@ void main() {
   group('PunchCoordinator Waterfall Cascade Tests', () {
     test('OUT_OFFICE workplace directly triggers camera selfie and submits without wifi/gps', () async {
       when(() => mockCameraService.captureSelfie())
-          .thenAnswer((_) async => '/cache/selfie_out_office.jpg');
+          .thenAnswer((_) async => Uint8List.fromList([1, 2, 3]));
       when(() => mockAttendanceRepo.punch(
             action: any(named: 'action'),
             payload: any(named: 'payload'),
@@ -228,7 +230,7 @@ void main() {
             action: any(named: 'action'),
             payload: any(
               named: 'payload',
-              that: isA<PunchRequestPayload>().having((p) => p.selfiePath, 'selfiePath', isNull),
+              that: isA<PunchRequestPayload>().having((p) => p.selfieBytes, 'selfieBytes', isNull),
             ),
           )).thenThrow(const ApiException(
         code: 'SELFIE_REQUIRED',
@@ -238,12 +240,12 @@ void main() {
 
       // Third punch call (Selfie) succeeds
       when(() => mockCameraService.captureSelfie())
-          .thenAnswer((_) async => '/cache/selfie_fallback.jpg');
+          .thenAnswer((_) async => Uint8List.fromList([1, 2, 3]));
       when(() => mockAttendanceRepo.punch(
             action: any(named: 'action'),
             payload: any(
               named: 'payload',
-              that: isA<PunchRequestPayload>().having((p) => p.selfiePath, 'selfiePath', isNotNull),
+              that: isA<PunchRequestPayload>().having((p) => p.selfieBytes, 'selfieBytes', isNotNull),
             ),
           )).thenAnswer((_) async => samplePunchResult);
 
@@ -348,7 +350,7 @@ void main() {
             action: any(named: 'action'),
             payload: any(
               named: 'payload',
-              that: isA<PunchRequestPayload>().having((p) => p.selfiePath, 'selfiePath', isNull),
+              that: isA<PunchRequestPayload>().having((p) => p.selfieBytes, 'selfieBytes', isNull),
             ),
           )).thenThrow(const ApiException(
         code: 'SELFIE_REQUIRED',
