@@ -99,7 +99,7 @@ void main() {
       // Cards content
       expect(find.text('Nghỉ phép có lương'), findsOneWidget);
       expect(find.text('Theo giờ · 08:00–12:00'), findsOneWidget);
-      expect(find.text('Chờ duyệt'), findsOneWidget); // StatusBadge
+      expect(find.text('Chờ quản lý'), findsOneWidget); // StatusBadge for PENDING_MANAGER
       expect(find.text('Tăng ca ngày 05/11/2026'), findsOneWidget);
       expect(find.text('Đã duyệt'), findsOneWidget); // StatusBadge
       expect(find.text('Đủ điều kiện: 120 phút'), findsOneWidget);

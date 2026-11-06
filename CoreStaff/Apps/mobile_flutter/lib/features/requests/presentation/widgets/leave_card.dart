@@ -6,12 +6,10 @@ import '../../data/models/leave_request_dto.dart';
 
 class LeaveCard extends StatelessWidget {
   final LeaveRequestDto item;
-  final VoidCallback? onCancel;
 
   const LeaveCard({
     super.key,
     required this.item,
-    this.onCancel,
   });
 
   String _formatDate(String? raw) {
@@ -19,30 +17,6 @@ class LeaveCard extends StatelessWidget {
     final clean = raw.length >= 10 ? raw.substring(0, 10) : raw;
     final parts = clean.split('-');
     return parts.length == 3 ? '${parts[2]}/${parts[1]}/${parts[0]}' : raw;
-  }
-
-  void _showCancelConfirmation(BuildContext context) {
-    showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Hủy đơn nghỉ phép'),
-        content: const Text('Bạn có chắc chắn muốn hủy đơn nghỉ phép này không?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Không'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext, true);
-              onCancel?.call();
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.dangerText),
-            child: const Text('Hủy đơn'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -154,23 +128,6 @@ class LeaveCard extends StatelessWidget {
                   color: AppColors.warningText,
                   fontSize: 11,
                   height: 1.4,
-                ),
-              ),
-            ),
-          ],
-          if (item.isCancellable && onCancel != null) ...[
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: () => _showCancelConfirmation(context),
-                icon: const Icon(Icons.close_rounded, size: 14),
-                label: const Text('Hủy đơn', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.dangerText,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
             ),

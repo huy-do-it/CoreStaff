@@ -60,7 +60,7 @@ class _CoreStaffAppState extends State<CoreStaffApp> {
     return BlocProvider<AuthBloc>(
       create: (context) => sl<AuthBloc>()..add(const AuthCheckRequested()),
       child: MaterialApp(
-        title: 'CoreStaff Mobile',
+        title: 'CoreStaff',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: _buildHome(),
@@ -77,12 +77,6 @@ class _CoreStaffAppState extends State<CoreStaffApp> {
       return ConnectionErrorScreen(
         message: _connectionError!,
         onRetry: _bootstrap,
-        onSkipToDemo: () {
-          setState(() {
-            _connectionError = null;
-            _authSubScreen = AuthSubScreen.login;
-          });
-        },
       );
     }
 

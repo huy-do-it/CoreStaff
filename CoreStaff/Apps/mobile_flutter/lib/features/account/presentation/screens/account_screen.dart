@@ -27,6 +27,25 @@ class AccountScreen extends StatelessWidget {
     required this.onLogout,
   });
 
+  /// Mirrors Expo `AccountScreen.tsx` `employmentStatus`: unknown or missing
+  /// statuses fall back to `Đang hoạt động` instead of the raw enum.
+  static String employmentStatusLabel(String? status) {
+    switch (status) {
+      case 'ACTIVE':
+        return 'Đang làm việc';
+      case 'PROBATION':
+        return 'Thử việc';
+      case 'ON_LEAVE':
+        return 'Đang nghỉ phép';
+      case 'RESIGNED':
+        return 'Đã nghỉ việc';
+      case 'TERMINATED':
+        return 'Đã chấm dứt';
+      default:
+        return 'Đang hoạt động';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     try {
@@ -121,6 +140,8 @@ class _AccountView extends StatelessWidget {
                 EmployeeProfileDto? profile;
                 String? errorMessage;
                 bool isLoading = false;
+                int payslipCount = 0;
+                int releasedPayslipCount = 0;
 
                 if (state is AccountLoading) {
                   isLoading = true;
@@ -128,6 +149,9 @@ class _AccountView extends StatelessWidget {
                   errorMessage = state.message;
                 } else if (state is AccountLoaded) {
                   profile = state.profile;
+                  errorMessage = state.errorMessage;
+                  payslipCount = state.payslips.length;
+                  releasedPayslipCount = state.releasedPayslipCount;
                 }
 
                 return Column(
@@ -158,7 +182,8 @@ class _AccountView extends StatelessWidget {
                         _buildMenuRow(
                           icon: Icons.account_balance_wallet_outlined,
                           title: 'Phiếu lương',
-                          description: 'Tra cứu bảng lương và thu nhập hàng tháng',
+                          description: '$payslipCount kỳ lương đã phát hành',
+                          badge: releasedPayslipCount,
                           onTap: onOpenPayslips!,
                         ),
                         const SizedBox(height: 8),
@@ -166,7 +191,7 @@ class _AccountView extends StatelessWidget {
                       _buildMenuRow(
                         icon: Icons.lock_outline_rounded,
                         title: 'Đổi mật khẩu',
-                        description: 'Cập nhật thông tin bảo mật tài khoản',
+                        description: 'Cập nhật thông tin bảo mật',
                         onTap: onChangePassword,
                       ),
                       const SizedBox(height: 16),
@@ -256,7 +281,7 @@ class _AccountView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          StatusBadge(status: status),
+          StatusBadge(status: status, label: AccountScreen.employmentStatusLabel(status)),
         ],
       ),
     );
@@ -339,6 +364,7 @@ class _AccountView extends StatelessWidget {
     required String title,
     required String description,
     required VoidCallback onTap,
+    int badge = 0,
   }) {
     return InkWell(
       onTap: onTap,
@@ -384,6 +410,28 @@ class _AccountView extends StatelessWidget {
                 ],
               ),
             ),
+            if (badge > 0) ...[
+              Container(
+                key: const Key('account_menu_badge'),
+                constraints: const BoxConstraints(minWidth: 22),
+                height: 22,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$badge',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
             const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textQuaternary),
           ],
         ),

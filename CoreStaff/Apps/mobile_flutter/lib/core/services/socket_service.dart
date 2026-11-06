@@ -43,14 +43,13 @@ class SocketServiceImpl implements SocketService {
   final StreamController<int> _revisionController =
       StreamController<int>.broadcast();
 
+  /// Exactly the 5 events Expo subscribes to (`realtime.ts:10-16`).
   static const List<String> domainEvents = [
     'attendance:changed',
     'request:decided',
     'leave:changed',
     'payslip:released',
     'compliance:warning',
-    'request:new',
-    'leave:new',
   ];
 
   SocketServiceImpl({
@@ -86,8 +85,11 @@ class SocketServiceImpl implements SocketService {
     final socketPath = isLocalApi ? '/local-api/socket.io' : '/socket.io';
     final namespaceUri = '${parsed.origin}/events';
 
+    // Same order as Expo (`realtime.ts:26`): polling performs an authenticated
+    // HTTP handshake carrying the session cookie before upgrading. A native
+    // WebSocket-first connection may not carry the cookie and fail auth.
     final optionBuilder = io.OptionBuilder()
-        .setTransports(['websocket', 'polling'])
+        .setTransports(['polling', 'websocket'])
         .setPath(socketPath)
         .enableReconnection()
         .setReconnectionAttempts(double.infinity)

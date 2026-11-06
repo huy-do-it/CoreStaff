@@ -234,15 +234,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Xác nhận ra ca'), findsNWidgets(2)); // button and dialog title
-      expect(find.textContaining('Sprint 5'), findsOneWidget);
+      expect(find.textContaining('chưa sẵn sàng'), findsOneWidget);
+      expect(find.textContaining('Sprint'), findsNothing);
       expect(find.text('Đóng'), findsOneWidget);
 
       await tester.tap(find.text('Đóng'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Sprint 5'), findsNothing);
+      expect(find.textContaining('chưa sẵn sàng'), findsNothing);
     });
 
-    testWidgets('tapping punch button shows Sprint 5 confirmation dialog and submits when PunchBloc registered', (tester) async {
+    testWidgets('tapping punch button shows confirmation dialog and submits when PunchBloc registered', (tester) async {
       final mockCoordinator = MockPunchCoordinator();
       when(() => mockCoordinator.executeWaterfall(
             today: any(named: 'today'),

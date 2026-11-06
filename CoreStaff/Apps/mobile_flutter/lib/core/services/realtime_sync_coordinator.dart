@@ -81,9 +81,7 @@ class RealtimeSyncCoordinator {
     }
 
     if (events.contains('request:decided') ||
-        events.contains('leave:changed') ||
-        events.contains('request:new') ||
-        events.contains('leave:new')) {
+        events.contains('leave:changed')) {
       requestsBloc?.add(const RequestsLoadStarted(isRefresh: true));
     }
 

@@ -57,7 +57,30 @@ class ErrorResolver {
     'PAYSLIP_NOT_FOUND_OR_NOT_ACCESSIBLE': 'Phiếu lương không tồn tại hoặc bạn không có quyền xem.',
   };
 
-  static String resolveAuthError(String? code, [String? fallback]) {
+  /// Auth wording copied verbatim from Expo `friendlyAuthError` (`auth.ts:108-121`).
+  static const Map<String, String> _authMessages = {
+    'VALIDATION_FAILED': 'Thông tin bạn nhập chưa hợp lệ.',
+    'AUTH_INVALID_CREDENTIALS': invalidCredentialsMessage,
+    'AUTH_ACCOUNT_DISABLED': 'Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ HR.',
+    'AUTH_ACCOUNT_LOCKED': 'Tài khoản đang bị khóa tạm thời. Vui lòng thử lại sau.',
+    'AUTH_SESSION_EXPIRED': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+    'AUTH_CURRENT_PASSWORD_INVALID': 'Mật khẩu hiện tại không đúng.',
+    'AUTH_PASSWORD_POLICY_FAILED':
+        'Mật khẩu mới cần ít nhất 8 ký tự, gồm chữ và số, và không trùng mật khẩu hiện tại.',
+    'AUTH_RESET_TOKEN_INVALID': 'Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.',
+  };
+
+  static const String invalidCredentialsMessage = 'Tài khoản hoặc mật khẩu không đúng.';
+
+  /// Mirrors Expo: known auth codes first, then any HTTP 401 without a
+  /// recognised code maps to the invalid-credentials message.
+  static String resolveAuthError(String? code, [String? fallback, int? statusCode]) {
+    if (code != null && _authMessages.containsKey(code)) {
+      return _authMessages[code]!;
+    }
+    if (statusCode == 401) {
+      return invalidCredentialsMessage;
+    }
     if (code != null && _domainMessages.containsKey(code)) {
       return _domainMessages[code]!;
     }
@@ -83,7 +106,7 @@ class ErrorResolver {
         return _domainMessages[error.code]!;
       }
       if (error.statusCode == 401) {
-        return 'Tài khoản hoặc mật khẩu không chính xác.';
+        return invalidCredentialsMessage;
       }
       if (error.message.isNotEmpty && _domainMessages.containsKey(error.message)) {
         return _domainMessages[error.message]!;

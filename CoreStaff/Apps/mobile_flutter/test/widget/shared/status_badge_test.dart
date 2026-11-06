@@ -11,6 +11,7 @@ void main() {
             body: Column(
               children: [
                 StatusBadge(status: 'PENDING'),
+                StatusBadge(status: 'PENDING_MANAGER'),
                 StatusBadge(status: 'APPROVED'),
                 StatusBadge(status: 'REJECTED'),
                 StatusBadge(status: 'ACTIVE'),
@@ -21,6 +22,7 @@ void main() {
       );
 
       expect(find.text('Chờ duyệt'), findsOneWidget);
+      expect(find.text('Chờ quản lý'), findsOneWidget);
       expect(find.text('Đã duyệt'), findsOneWidget);
       expect(find.text('Từ chối'), findsOneWidget);
       expect(find.text('Đang làm việc'), findsOneWidget);

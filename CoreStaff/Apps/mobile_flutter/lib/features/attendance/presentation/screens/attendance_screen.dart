@@ -70,8 +70,7 @@ class _AttendanceView extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: Text(title),
         content: const Text(
-          'Hệ thống ghi nhận điểm danh phần cứng (GPS, Wi-Fi BSSID, và Selfie) '
-          'đang trong chế độ xem trước (Sprint 4) và sẽ được kích hoạt tại Sprint 5.',
+          'Chức năng chấm công hiện chưa sẵn sàng. Vui lòng thử lại sau.',
         ),
         actions: [
           TextButton(

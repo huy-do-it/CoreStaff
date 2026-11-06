@@ -1,4 +1,7 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:network_info_plus/network_info_plus.dart';
+import 'location_service.dart';
 
 class WifiInfo {
   final String? ssid;
@@ -33,8 +36,9 @@ abstract class WifiService {
 
 class WifiServiceImpl implements WifiService {
   final NetworkInfo _networkInfo;
+  final LocationService? locationService;
 
-  WifiServiceImpl({NetworkInfo? networkInfo})
+  WifiServiceImpl({NetworkInfo? networkInfo, this.locationService})
       : _networkInfo = networkInfo ?? NetworkInfo();
 
   static String? cleanWifiValue(String? value) {
@@ -82,6 +86,13 @@ class WifiServiceImpl implements WifiService {
 
   @override
   Future<WifiInfo> getCurrentWifi() async {
+    // On Android 10+, reading Wi-Fi SSID/BSSID requires runtime location permission.
+    if (!kIsWeb && Platform.isAndroid && locationService != null) {
+      try {
+        await locationService!.hasPermission();
+      } catch (_) {}
+    }
+
     String? ssid;
     String? bssid;
     try {

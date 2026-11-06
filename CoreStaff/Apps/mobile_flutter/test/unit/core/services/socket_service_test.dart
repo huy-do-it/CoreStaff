@@ -80,7 +80,7 @@ void main() {
 
       expect(capturedUri, 'https://corestaff.test.com/events');
       expect(capturedOptions['path'], '/socket.io');
-      expect(capturedOptions['transports'], ['websocket', 'polling']);
+      expect(capturedOptions['transports'], ['polling', 'websocket']);
       expect(capturedOptions['extraHeaders'], containsPair('cookie', contains('sid=sid_mock_123')));
       expect(service.isConnected, isTrue);
 

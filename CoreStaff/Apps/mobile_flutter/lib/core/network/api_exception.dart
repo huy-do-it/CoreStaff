@@ -15,10 +15,10 @@ class AuthApiException implements Exception {
 
   static String friendlyMessage(dynamic error) {
     if (error is AuthApiException) {
-      return ErrorResolver.resolveAuthError(error.code, error.message);
+      return ErrorResolver.resolveAuthError(error.code, error.message, error.statusCode);
     }
     if (error is ApiException) {
-      return ErrorResolver.resolveAuthError(error.code, error.message);
+      return ErrorResolver.resolveAuthError(error.code, error.message, error.statusCode);
     }
     if (error is NetworkException) {
       return error.message;

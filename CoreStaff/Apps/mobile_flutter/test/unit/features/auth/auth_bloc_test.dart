@@ -121,7 +121,7 @@ void main() {
         isA<AuthFailure>().having(
           (s) => s.message,
           'message',
-          'Tài khoản hoặc mật khẩu không chính xác.',
+          'Tài khoản hoặc mật khẩu không đúng.',
         ),
       ],
     );

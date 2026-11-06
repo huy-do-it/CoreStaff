@@ -7,11 +7,15 @@ import 'package:corestaff_mobile/features/account/data/models/employee_profile_d
 import 'package:corestaff_mobile/features/account/presentation/bloc/account_bloc.dart';
 import 'package:corestaff_mobile/features/account/presentation/screens/account_screen.dart';
 import 'package:corestaff_mobile/features/auth/data/models/auth_user_dto.dart';
+import 'package:corestaff_mobile/features/payslip/data/models/payslip_dto.dart';
+import 'package:corestaff_mobile/features/payslip/data/payslip_repository.dart';
 
 class MockAccountRepository extends Mock implements AccountRepository {}
+class MockPayslipRepository extends Mock implements PayslipRepository {}
 
 void main() {
   late MockAccountRepository mockRepository;
+  late MockPayslipRepository mockPayslipRepo;
 
   final testUser = AuthUser(
     id: 'user_001',
@@ -40,11 +44,17 @@ void main() {
 
   setUp(() {
     mockRepository = MockAccountRepository();
+    mockPayslipRepo = MockPayslipRepository();
     final sl = GetIt.instance;
     if (sl.isRegistered<AccountBloc>()) {
       sl.unregister<AccountBloc>();
     }
-    sl.registerFactory<AccountBloc>(() => AccountBloc(accountRepository: mockRepository));
+    sl.registerFactory<AccountBloc>(
+      () => AccountBloc(
+        accountRepository: mockRepository,
+        payslipRepository: mockPayslipRepo,
+      ),
+    );
   });
 
   tearDown(() {
@@ -57,12 +67,29 @@ void main() {
   group('AccountScreen Widget Tests', () {
     testWidgets('renders profile data when loaded successfully', (tester) async {
       when(() => mockRepository.getMyProfile()).thenAnswer((_) async => testProfile);
+      when(() => mockPayslipRepo.getMyPayslips()).thenAnswer((_) async => [
+        const PayslipDto(
+          id: 'ps_1',
+          periodLabel: '10/2026',
+          status: 'RELEASED',
+          grossEarnings: 15000000,
+          netSalary: 13000000,
+          socialInsurance: 1000000,
+          healthInsurance: 200000,
+          unemploymentInsurance: 100000,
+          pitAmount: 700000,
+          otherDeductions: 0,
+          earningBreakdown: [],
+          deductionBreakdown: [],
+        ),
+      ]);
 
       await tester.pumpWidget(
         MaterialApp(
           home: AccountScreen(
             user: testUser,
             onChangePassword: () {},
+            onOpenPayslips: () {},
             onLogout: () {},
           ),
         ),
@@ -83,6 +110,9 @@ void main() {
       expect(find.text('nhanvien@corestaff.vn'), findsOneWidget);
       expect(find.text('0987654321'), findsOneWidget);
       expect(find.text('Hà Nội'), findsOneWidget);
+      expect(find.text('1 kỳ lương đã phát hành'), findsOneWidget);
+      expect(find.byKey(const Key('account_menu_badge')), findsOneWidget);
+      expect(find.text('1'), findsOneWidget);
     });
 
     testWidgets('displays confirmation dialog on logout press and calls callback on confirm', (tester) async {

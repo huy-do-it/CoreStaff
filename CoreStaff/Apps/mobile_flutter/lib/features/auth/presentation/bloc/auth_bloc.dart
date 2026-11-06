@@ -76,7 +76,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         forcedPasswordChange: result.mustChangePassword,
       ));
     } on ApiException catch (e) {
-      final resolved = ErrorResolver.resolveAuthError(e.code, e.message);
+      final resolved = ErrorResolver.resolveAuthError(e.code, e.message, e.statusCode);
       emit(AuthFailure(message: resolved));
     } on NetworkException catch (e) {
       emit(AuthFailure(message: e.message));

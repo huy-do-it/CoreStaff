@@ -102,6 +102,7 @@ Future<void> initDependencies() async {
     sl.registerFactory<AccountBloc>(
       () => AccountBloc(
         accountRepository: sl<AccountRepository>(),
+        payslipRepository: sl<PayslipRepository>(),
       ),
     );
   }
@@ -149,11 +150,13 @@ Future<void> initDependencies() async {
   }
 
   // 6. Hardware Services (MIG-16, MIG-17, MIG-18)
-  if (!sl.isRegistered<WifiService>()) {
-    sl.registerLazySingleton<WifiService>(() => WifiServiceImpl());
-  }
   if (!sl.isRegistered<LocationService>()) {
     sl.registerLazySingleton<LocationService>(() => LocationServiceImpl());
+  }
+  if (!sl.isRegistered<WifiService>()) {
+    sl.registerLazySingleton<WifiService>(
+      () => WifiServiceImpl(locationService: sl<LocationService>()),
+    );
   }
   if (!sl.isRegistered<CameraService>()) {
     sl.registerLazySingleton<CameraService>(() => CameraServiceImpl());

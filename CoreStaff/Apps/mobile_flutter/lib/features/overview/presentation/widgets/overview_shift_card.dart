@@ -14,6 +14,22 @@ class OverviewShiftCard extends StatelessWidget {
     required this.onNavigateAttendance,
   });
 
+  /// Mirrors Expo `OverviewScreen.tsx` `statusLabel`: the overview card has its
+  /// own wording (`Đã hoàn thành ca`) and treats every other status as
+  /// "not checked in", unlike the attendance tab which says `Hoàn thành`.
+  static String overviewStatusLabel(String? status) {
+    switch (status) {
+      case 'CHECKED_IN':
+        return 'Đang trong ca';
+      case 'COMPLETED':
+        return 'Đã hoàn thành ca';
+      case 'DAY_OFF':
+        return 'Ngày nghỉ';
+      default:
+        return 'Chưa vào ca';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final shiftName = today?.assignment.shiftName ?? 'Chưa có ca làm';
@@ -66,7 +82,7 @@ class OverviewShiftCard extends StatelessWidget {
                   ],
                 ),
               ),
-              StatusBadge(status: status),
+              StatusBadge(status: status, label: overviewStatusLabel(status)),
             ],
           ),
           const SizedBox(height: 6),

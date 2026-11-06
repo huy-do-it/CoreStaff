@@ -121,8 +121,9 @@ class StatusBadge extends StatelessWidget {
       case 'LOCKED':
         return 'Đã khóa';
       case 'PENDING':
-      case 'PENDING_MANAGER':
         return 'Chờ duyệt';
+      case 'PENDING_MANAGER':
+        return 'Chờ quản lý';
       case 'APPROVED':
         return 'Đã duyệt';
       case 'REJECTED':

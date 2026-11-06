@@ -6,31 +6,31 @@ void main() {
     test('resolves known auth error codes to friendly Vietnamese messages', () {
       expect(
         ErrorResolver.resolveAuthError('AUTH_INVALID_CREDENTIALS', 'default'),
-        'Tài khoản hoặc mật khẩu không chính xác.',
+        'Tài khoản hoặc mật khẩu không đúng.',
       );
       expect(
         ErrorResolver.resolveAuthError('AUTH_ACCOUNT_DISABLED', 'default'),
-        'Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ bộ phận Nhân sự.',
+        'Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ HR.',
       );
       expect(
         ErrorResolver.resolveAuthError('AUTH_ACCOUNT_LOCKED', 'default'),
-        'Tài khoản tạm thời bị khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau.',
+        'Tài khoản đang bị khóa tạm thời. Vui lòng thử lại sau.',
       );
       expect(
         ErrorResolver.resolveAuthError('AUTH_SESSION_EXPIRED', 'default'),
-        'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.',
+        'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
       );
       expect(
         ErrorResolver.resolveAuthError('AUTH_CURRENT_PASSWORD_INVALID', 'default'),
-        'Mật khẩu hiện tại không chính xác.',
+        'Mật khẩu hiện tại không đúng.',
       );
       expect(
         ErrorResolver.resolveAuthError('AUTH_PASSWORD_POLICY_FAILED', 'default'),
-        'Mật khẩu mới không đạt yêu cầu bảo mật (tối thiểu 8 ký tự, gồm chữ và số).',
+        'Mật khẩu mới cần ít nhất 8 ký tự, gồm chữ và số, và không trùng mật khẩu hiện tại.',
       );
       expect(
         ErrorResolver.resolveAuthError('AUTH_RESET_TOKEN_INVALID', 'default'),
-        'Mã khôi phục không hợp lệ hoặc đã hết hạn.',
+        'Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.',
       );
     });
 
@@ -47,6 +47,24 @@ void main() {
         ErrorResolver.resolveEmployeeError('REQUEST_ALREADY_PROCESSED', 'default'),
         'Yêu cầu này đã được xử lý trước đó.',
       );
+    });
+
+    test('maps HTTP 401 without a known code to invalid credentials (Expo parity)', () {
+      expect(
+        ErrorResolver.resolveAuthError(null, 'Unauthorized', 401),
+        'Tài khoản hoặc mật khẩu không đúng.',
+      );
+      expect(
+        ErrorResolver.resolveAuthError('SOME_UNKNOWN', 'raw', 401),
+        'Tài khoản hoặc mật khẩu không đúng.',
+      );
+      // Known auth code still wins over the generic 401 mapping.
+      expect(
+        ErrorResolver.resolveAuthError('AUTH_SESSION_EXPIRED', 'raw', 401),
+        'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+      );
+      // Non-401 unknown errors keep the raw server message.
+      expect(ErrorResolver.resolveAuthError(null, 'raw', 500), 'raw');
     });
 
     test('falls back to provided message or generic fallback when code is unknown', () {

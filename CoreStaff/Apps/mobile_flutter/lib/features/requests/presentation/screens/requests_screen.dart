@@ -199,9 +199,6 @@ class _RequestsView extends StatelessWidget {
                           child: switch (feedItem) {
                             LeaveFeedItem(leave: final l) => LeaveCard(
                                 item: l,
-                                onCancel: () {
-                                  context.read<RequestsBloc>().add(RequestsCancelRequested(l.id));
-                                },
                               ),
                             OvertimeFeedItem(overtime: final o) => OvertimeCard(
                                 item: o,

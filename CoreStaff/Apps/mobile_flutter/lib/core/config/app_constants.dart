@@ -22,8 +22,12 @@ class AppConstants {
   static const Duration receiveTimeout = Duration(seconds: 15);
   static const Duration healthTimeout = Duration(seconds: 4);
 
-  /// Default remote API endpoint.
-  static const String defaultRemoteUrl = 'https://18-141-68-40.sslip.io';
+  /// Default remote API endpoint. Can be overridden at build/run time via
+  /// `--dart-define=API_BASE_URL=https://...`
+  static const String defaultRemoteUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://18-141-68-40.sslip.io',
+  );
 
   /// Local emulator fallback endpoints.
   static const String androidEmulatorLocalUrl = 'http://10.0.2.2:3000';

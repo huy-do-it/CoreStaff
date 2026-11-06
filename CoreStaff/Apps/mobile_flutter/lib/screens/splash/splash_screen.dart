@@ -42,13 +42,11 @@ class SplashScreen extends StatelessWidget {
 class ConnectionErrorScreen extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
-  final VoidCallback? onSkipToDemo;
 
   const ConnectionErrorScreen({
     super.key,
     required this.message,
     required this.onRetry,
-    this.onSkipToDemo,
   });
 
   @override
@@ -100,13 +98,6 @@ class ConnectionErrorScreen extends StatelessWidget {
                   label: 'Thử kết nối lại',
                   onPress: onRetry,
                 ),
-                if (onSkipToDemo != null) ...[
-                  const SizedBox(height: 12),
-                  SecondaryButton(
-                    label: 'Xem trước giao diện (Offline Demo)',
-                    onPress: onSkipToDemo,
-                  ),
-                ],
               ],
             ),
           ),
